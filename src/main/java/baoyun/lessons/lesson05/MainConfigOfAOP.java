@@ -151,6 +151,28 @@ public class MainConfigOfAOP {
  *          2.1.4 给容器中返回当前组件使用Cglib增强了的对象
  *          所以当我们去容器中的MathCalculator来执行方法，实际上是使用了 Cglib增强了的MathCalculator的代理对象
  *
+ *   3.目标方法执行：
+ *      3.1 容器中保存了组件的代理对象，这个对象里面保存了增强器，目标对象，advisorArray 等等
+ *          3.1.1 CglibAopProxy.intercept; 拦截目标方法执行
+ *          3.1.2 根据ProxyFactory对象获取目标方法拦截器链
+ *          List<Object> chain = this.advised.getInterceptorsAndDynamicInterceptionAdvice(method, targetClass);
+ *              3.1.2.1 创建一个List<Object> interceptorList 来保存所有的拦截器，长度为advisors的长度：
+ *                  一个默认的Expose + 其他的增强器
+ *              3.1.2.2 遍历所以的advisors, 如果是pointcut, 并且如果是适用于这个方法的，将其转化成 MethodInterceptor[] interceptors = registry.getInterceptors(advisor)
+ *                  3.1.2.2.1 判断这个advisor 是不是 MethodInterceptor, 如果是直接返回加入集合中，
+ *                              如果不是，用适配器转化成MethodInterceptor, 转化完成返回 MethodInterceptor数组
+ *              3.1.2.3 将MethodInterceptor数组加入List<Object> interceptorList， 返回
+ *              3.1.2.4 拦截器链，就是将每个通知方法包装成拦截器，利用MethodInterceptor机制
+ *                      每个拦截器实现了MethodInterceptor接口， 里面重写了invoke方法
+ *          3.1.3 如果没有拦截器链，用代理方法执行目标方法
+ *              methodProxy.invoke(target, argsToUse);
+ *          3.1.4 如果有拦截器链，将拦截器链和其他信息传入创建一个CglibMethodInvocation对象，并且调用CglibMethodInvocation.proceed()
+ *                  retVal = CglibMethodInvocation.proceed()
+ *              3.1.4.1  CglibMethodInvocation.proceed() 会调用 ReflectiveMethodInvocation.proceed()
+ *              https://docs.google.com/drawings/d/1g8E_KXpTXu_c3NGvzpwx5vMjSe95q1aW_a7kWDOo-oM/edit
+ *
+ *
+ *
  *
  *
  *
